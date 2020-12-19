@@ -51,8 +51,10 @@ func getContactTracing(db *mongo.Database, start, count int, userID string, time
 						fmt.Println(err)
 					}
 					
-					result:= userCol.FindOne(ctx, bson.M{"_id": objectID})
-					result.Decode(&user)				
+					err = userCol.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)				
+					if err != nil{
+						fmt.Println(err)
+					}
 					users = append(users, user)
 				} else {
 					objectID, err := primitive.ObjectIDFromHex(userID)
@@ -60,8 +62,10 @@ func getContactTracing(db *mongo.Database, start, count int, userID string, time
 						fmt.Println(err)
 					}
 					
-					result:= userCol.FindOne(ctx, bson.M{"_id": objectID})
-					result.Decode(&user)				
+					err = userCol.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)				
+					if err != nil{
+						fmt.Println(err)
+					}
 					users = append(users, user)
 				}
 			}
