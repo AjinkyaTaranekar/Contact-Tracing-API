@@ -55,9 +55,10 @@ func (app *App) configDB(ctx context.Context) (*mongo.Database, error) {
 
 // routing
 func (app *App) initializeRoutes() {
-	app.Router.HandleFunc("/api/users", app.getUsers).Methods("GET")
-	app.Router.HandleFunc("/api/users/{id}", app.getUser).Methods("GET")
-	app.Router.HandleFunc("/api/users", app.createUser).Methods("POST")
+	app.Router.HandleFunc("/users", app.getUsers).Methods("GET")
+	app.Router.HandleFunc("/users/{id}", app.getUser).Methods("GET")
+	app.Router.HandleFunc("/users", app.createUser).Methods("POST")
+	app.Router.HandleFunc("/contacts", app.createContact).Methods("POST")
 }
 
 func (app *App) getUsers(writer http.ResponseWriter, req *http.Request) {
@@ -84,8 +85,8 @@ func (app *App) getUser(writer http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	id, _ := primitive.ObjectIDFromHex(vars["id"])
 
-	b := User{ID: id}
-	if err := b.getUser(app.DB); err != nil {
+	user := User{ID: id}
+	if err := user.getUser(app.DB); err != nil {
 		switch err {
 		case mongo.ErrNoDocuments:
 			respondWithError(writer, http.StatusNotFound, "User not found")
@@ -95,20 +96,39 @@ func (app *App) getUser(writer http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	respondWithJSON(writer, http.StatusOK, b)
+	respondWithJSON(writer, http.StatusOK, user)
 }
 
 func (app *App) createUser(writer http.ResponseWriter, req *http.Request) {
-	var b User
+	var user User
 
 	decoder := json.NewDecoder(req.Body)
-	if err := decoder.Decode(&b); err != nil {
+	if err := decoder.Decode(&user); err != nil {
 		respondWithError(writer, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer req.Body.Close()
 
-	result, err := b.createUser(app.DB)
+	result, err := user.createUser(app.DB)
+	if err != nil {
+		respondWithError(writer, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(writer, http.StatusCreated, result)
+}
+
+func (app *App) createContact(writer http.ResponseWriter, req *http.Request) {
+	var contact Contact
+
+	decoder := json.NewDecoder(req.Body)
+	if err := decoder.Decode(&contact); err != nil {
+		respondWithError(writer, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer req.Body.Close()
+
+	result, err := contact.createContact(app.DB)
 	if err != nil {
 		respondWithError(writer, http.StatusInternalServerError, err.Error())
 		return

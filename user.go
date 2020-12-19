@@ -58,8 +58,6 @@ func (user *User) createUser(db *mongo.Database) (*mongo.InsertOneResult, error)
 
 	user.CreationTimeStamp = time.Now()
 	result, err := col.InsertOne(ctx, user)
-	// Convert to map[string]string
-	// id := map[string]string{"_id": result.InsertedID.(primitive.ObjectID).Hex()}
 	return result, err
 }
 
