@@ -40,7 +40,7 @@ func getUsers(db *mongo.Database, start, count int) ([]User, error) {
 		return nil, err
 	}
 
-	return users, nil
+	return users[start : start + count], nil
 }
 
 func (user *User) getUser(db *mongo.Database) error {

@@ -76,7 +76,7 @@ func getContactTracing(db *mongo.Database, start, count int, userID string, time
 		return nil, err
 	}
 
-	return users, nil
+	return users[start : start + count], nil
 }
 
 func (contact *Contact) createContact(db *mongo.Database) (*mongo.InsertOneResult, error) {

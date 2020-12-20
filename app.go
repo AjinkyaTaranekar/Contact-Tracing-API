@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 	"strings"
+	"regexp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -65,8 +66,8 @@ func (app *App) getUsers(writer http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 		count, _ := strconv.Atoi(req.FormValue("count"))
 		start, _ := strconv.Atoi(req.FormValue("start"))
-	
-		if count > 10 || count < 1 {
+
+		if count == 0  || count < 1 {
 			count = 10
 		}
 		if start < 0 {
@@ -113,19 +114,32 @@ func (app *App) createUser(writer http.ResponseWriter, req *http.Request) {
 	
 	if req.Method == "POST" {
 		var user User
-	
+		email, _ := regexp.Compile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+		phone, _ := regexp.Compile("^[0-9]{10}$")
 		decoder := json.NewDecoder(req.Body)
+
 		if err := decoder.Decode(&user); err != nil {
 			respondWithError(writer, http.StatusBadRequest, "Invalid request payload")
 			return
 		}
+
 		defer req.Body.Close()
 
+		if email.MatchString(user.EmailAddress) == false {
+			respondWithError(writer, http.StatusInternalServerError, "Please check your email")
+			return
+		}
+		
+		if phone.MatchString(user.PhoneNo) == false {
+			respondWithError(writer, http.StatusInternalServerError, "Please check your phone")
+			return
+		}
 		result, err := user.createUser(app.DB)
 		if err != nil {
 			respondWithError(writer, http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		user.ID = result.InsertedID.(primitive.ObjectID)
 		respondWithJSON(writer, http.StatusCreated, user)
 
@@ -145,12 +159,45 @@ func (app *App) contact(writer http.ResponseWriter, req *http.Request) {
 			return
 		}
 		defer req.Body.Close()
-	
+		
+		objectIDOne, err := primitive.ObjectIDFromHex(contact.ContactIDOne)
+		if err != nil{
+			fmt.Println(err)
+		}
+		
+		objectIDTwo, err := primitive.ObjectIDFromHex(contact.ContactIDTwo)
+		if err != nil{
+			fmt.Println(err)
+		}
+		
+		userOne := User{ID: objectIDOne}
+		if err := userOne.getUser(app.DB); err != nil {
+			switch err {
+			case mongo.ErrNoDocuments:
+				respondWithError(writer, http.StatusNotFound, "User "+contact.ContactIDOne+" not found" )
+			default:
+				respondWithError(writer, http.StatusInternalServerError, err.Error())
+			}
+			return
+		}
+		
+		userTwo := User{ID: objectIDTwo}
+		if err := userTwo.getUser(app.DB); err != nil {
+			switch err {
+			case mongo.ErrNoDocuments:
+				respondWithError(writer, http.StatusNotFound, "User "+contact.ContactIDTwo+" not found" )
+			default:
+				respondWithError(writer, http.StatusInternalServerError, err.Error())
+			}
+			return
+		}
+		
 		result, err := contact.createContact(app.DB)
 		if err != nil {
 			respondWithError(writer, http.StatusInternalServerError, err.Error())
 			return
 		}
+		
 		contact.ID = result.InsertedID.(primitive.ObjectID)
 		respondWithJSON(writer, http.StatusCreated, contact)
 
@@ -163,7 +210,7 @@ func (app *App) contact(writer http.ResponseWriter, req *http.Request) {
 		start, _ := strconv.Atoi(req.FormValue("start"))
 		req.Method = "GET"
 
-		if count > 10 || count < 1 {
+		if count < 1 {
 			count = 10
 		}
 		if start < 0 {
