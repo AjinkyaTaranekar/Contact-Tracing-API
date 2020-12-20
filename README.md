@@ -3,7 +3,7 @@
 ## List of Tasks Done
 - Completion Percentage :- 75 %
 - Total 5 endpoints are working. 
-- Make the server thread safe i.e. it should not have any race conditions especially when two meetings are being booked simultaneously for the same participant with overlapping time.
+- Make the server thread safe (I didn't know how to proceed with it in existing code, learned there are ways by locking function when one requestion is fetched but couldn't implemented it).
 - Added pagination to the list endpoint.
 - Add unit tests (added code, but failed to run)
 
