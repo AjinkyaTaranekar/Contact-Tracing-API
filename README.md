@@ -5,7 +5,7 @@
 - Total 5 endpoints are working. 
 - Make the server thread safe i.e. it should not have any race conditions especially when two meetings are being booked simultaneously for the same participant with overlapping time.
 - Added pagination to the list endpoint.
-- Add unit tests (going on)
+- Add unit tests (added code, but failed to run)
 
 ## How to run the application
 
@@ -24,6 +24,7 @@
     ```
 
 > Note: By default the port number its being run on is **5005**.
+
 > Note: The Mongo DB is setup on my Azure VM.
 
 ## Endpoints Description
