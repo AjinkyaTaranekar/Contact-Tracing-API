@@ -34,7 +34,7 @@ func getContactTracing(db *mongo.Database, start, count int, userID string, time
 		var contact Contact
 		cursor.Decode(&contact)
 		if userID == contact.ContactIDOne || userID == contact.ContactIDTwo{
-			layout := "2006-01-02T15:04:05.000Z"
+			layout := "2020-12-26T15:04:05.000Z"
 			given, err := time.Parse(layout, timestamp)
 			
 			if err != nil{
